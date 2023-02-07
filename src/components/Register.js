@@ -1,7 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom';
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
+import app from '../firebase/firebase.init';
+import { toast } from 'react-toastify';
 
-
+const auth = getAuth(app);
 
 const Register = () => {
 
@@ -12,6 +15,37 @@ const Register = () => {
     const email = form.email.value;
     const password = form.password.value;
     console.log(name, email, password)
+
+        // Create Account
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(result => {
+        const user = result.user;
+        console.log(user);
+        // update Name
+        updateProfile(auth.currentUser, {
+          displayName: name
+        }).then(() => {
+          toast.success('Name Updated')
+          console.log(auth.currentUser.displayName)
+
+
+          sendEmailVerification(auth.currentUser)
+            .then(() => {
+              // Email verification sent!
+              toast.success('Please check your email for verification email')
+              // ...
+            });
+          // Profile updated!
+          // ...
+        }).catch((error) => {
+          toast.error(error.message)
+          // An error occurred
+          // ...
+        });
+      })
+      .catch(error => {
+        console.log(error)
+      })
   }
   return (
     <div className='flex justify-center items-center pt-8'>
