@@ -1,13 +1,16 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { Link } from 'react-router-dom';
-import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
-import app from '../firebase/firebase.init';
 import { toast } from 'react-toastify';
+import { AuthContext } from '../contexts/UserContext';
 
-const auth = getAuth(app);
 
 const Register = () => {
 
+  const { createUser, updateName, verifyEmail, signInWithGoogle } = useContext(AuthContext)
+
+
+
+  // Sing up using Email and pass
   const handleSubmit = (event) => {
     event.preventDefault();
     const form = event.target;
@@ -16,32 +19,44 @@ const Register = () => {
     const password = form.password.value;
     console.log(name, email, password)
 
-        // Create Account
-    createUserWithEmailAndPassword(auth, email, password)
+    //1. Create Account
+    createUser(email, password)
       .then(result => {
         const user = result.user;
         console.log(user);
-        // update Name
-        updateProfile(auth.currentUser, {
-          displayName: name
-        }).then(() => {
-          toast.success('Name Updated')
-          console.log(auth.currentUser.displayName)
+        //2. update Name
+        updateName(name)
+          .then(() => {
+            toast.success('Name Updated')
 
+            //3. Email verification sent!
+            verifyEmail()
+              .then(() => {
+                toast.success('Please check your email for verification email')
+                // ...
+              })
+              .catch(error => {
+                console.log(error)
+              })
 
-          sendEmailVerification(auth.currentUser)
-            .then(() => {
-              // Email verification sent!
-              toast.success('Please check your email for verification email')
-              // ...
-            });
-          // Profile updated!
-          // ...
-        }).catch((error) => {
-          toast.error(error.message)
-          // An error occurred
-          // ...
-        });
+            // Profile updated!
+            // ...
+          }).catch((error) => {
+            toast.error(error.message)
+            // An error occurred
+            // ...
+          });
+      })
+      .catch(error => {
+        console.log(error)
+      })
+  }
+  // Google sign in
+  const handleGoogleSignIn = () => {
+    signInWithGoogle()
+      .then(result => {
+        const user = result.user;
+        console.log(user)
       })
       .catch(error => {
         console.log(error)
@@ -122,7 +137,7 @@ const Register = () => {
           <div className='flex-1 h-px sm:w-16 dark:bg-gray-700'></div>
         </div>
         <div className='flex justify-center space-x-4'>
-          <button aria-label='Log in with Google' className='p-3 rounded-sm'>
+          <button onClick={handleGoogleSignIn} aria-label='Log in with Google' className='p-3 rounded-sm'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               viewBox='0 0 32 32'
